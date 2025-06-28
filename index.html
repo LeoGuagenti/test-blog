@@ -54,7 +54,7 @@
       width: 100%;
       height: 250px; /* Adjust as needed for card carousels */
       object-fit: cover; /* Ensures images cover the area without distortion */
-      /* border: 2px solid red; /* TEMPORARY: For debugging image visibility */
+      /* Removed temporary red border */
     }
   </style>
 </head>
@@ -154,8 +154,6 @@
 
     // sortPosts now just re-renders all posts based on the new order
     function sortPosts() {
-        // Fetch posts again if you need to re-process content, otherwise just re-sort and display existing ones
-        // For simplicity, calling loadPosts() which will re-fetch and re-render everything
         loadPosts();
     }
 
@@ -193,22 +191,23 @@
             const { cleanedContent, extractedImages } = processHtmlContent(post.content);
 
             let carouselHtml = '';
+            let contentColumnClass = 'col-12'; // Default to full width for content
+
             if (extractedImages.length > 0) {
                 const carouselId = `imageCarousel-${post.date.replace(/[^a-zA-Z0-9]/g, '')}-${index}`; // Unique ID for each carousel
                 let carouselItems = '';
                 extractedImages.forEach((url, imgIndex) => {
                     const activeClass = imgIndex === 0 ? 'active' : '';
-                    // TEMPORARY: Red border for debugging image rendering
                     carouselItems += `
                         <div class="carousel-item ${activeClass}">
-                            <img src="${url}" class="d-block w-100" alt="Post Image ${imgIndex + 1}" style="border: 2px solid red;">
+                            <img src="${url}" class="d-block w-100 h-100" alt="Post Image ${imgIndex + 1}">
                         </div>
                     `;
                 });
 
                 carouselHtml = `
-                    <div id="${carouselId}" class="carousel slide w-100 mb-3" data-bs-ride="carousel">
-                      <div class="carousel-inner">
+                    <div id="${carouselId}" class="carousel slide w-100 h-100" data-bs-ride="carousel">
+                      <div class="carousel-inner h-100">
                         ${carouselItems}
                       </div>
                       <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
@@ -221,6 +220,7 @@
                       </button>
                     </div>
                 `;
+                contentColumnClass = 'col-md-6'; // Adjust content width if carousel is present
             }
 
             const postHtml = `
@@ -230,10 +230,8 @@
                     ${location}
                     <p class="mb-1"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
 
-                    <div class="row"> <div class="col-md-6"> <p class="card-text">${cleanedContent}</p>
-                      </div>
-                      <div class="col-md-6"> ${carouselHtml} </div>
-                    </div>
+                    <div class="row g-3 d-flex align-items-stretch"> <div class="${contentColumnClass}"> <p class="card-text h-100">${cleanedContent}</p> </div>
+                      ${extractedImages.length > 0 ? `<div class="col-md-6">${carouselHtml}</div>` : ''} </div>
 
                   </div>
                 </div>
