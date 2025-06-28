@@ -57,7 +57,7 @@
     .card .carousel,
     .card .carousel-inner,
     .card .carousel-item {
-        height: 300px;
+        height: 3em;
     }
   </style>
 </head>
@@ -235,7 +235,7 @@
         // Initialize all carousels after they are added to the DOM
         document.querySelectorAll('.carousel.slide').forEach(carouselEl => {
             new bootstrap.Carousel(carouselEl, {
-                interval: 15000,
+                interval: 10000,
                 pause: 'hover'
             });
         });
