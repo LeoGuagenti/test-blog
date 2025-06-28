@@ -118,16 +118,12 @@
         const sortOrder = document.getElementById('sortOrder').value;
         const postsContainer = document.getElementById('posts');
 
-        console.log(`sort order: ${sortOrder}`)
-
         const posts = Array.from(postsContainer.children).map(card => {
             return {
                 date: card.dataset.date,
                 html: card.outerHTML
             };
         });
-
-        console.log(`posts: ${posts}`)
 
         posts.sort((a, b) => {
             const dateA = new Date(a.date);
@@ -144,7 +140,6 @@
             postsContainer.insertAdjacentHTML('beforeend', post.html);
         });
     }
-
 
     function sortAndDisplayPosts(posts) {
         const sortOrder = document.getElementById('sortOrder').value;
@@ -177,10 +172,10 @@
             const location = post.location ? `<p class="card-text"><small class="text-body-secondary">Location: ${post.location}</small></p>` : '';
             const postHtml = `
                 <div class="card bg-dark-subtle" data-date="${post.date}">
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <h2 class="card-title text-warning">${post.title}</h2>
                         ${location}
-                        <p class="card-text"><small class="text-body-secondary m-0 p-0">Posted on ${formattedDate} at ${formattedTime}</small></p>
+                        <p class="card-text"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
                         <p class="card-text">${marked.parse(post.content)}</p>
                     </div>
                 </div>
