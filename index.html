@@ -42,26 +42,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blog title</title>
+  <title>My Europe Adventure</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body { background-color: #212529; }
     .card.bg-dark-subtle { background-color: #2d3238 !important; }
     .card.bg-body-secondary { background-color: #3c4249 !important; }
     .card.bg-body-tertiary { background-color: #343a40 !important; }
+    /* Ensure carousel images fit */
+    .carousel-item img {
+      width: 100%;
+      height: 300px; /* Adjust as needed */
+      object-fit: cover; /* Ensures images cover the area without distortion */
+    }
   </style>
 </head>
 <body class="bg-dark text-white">
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="/">Blog Title</a>
+      <a class="navbar-brand" href="/">My Europe Adventure</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link" href="create.html">Make a post</a>
+            <a class="nav-link" href="admin/index.html">Make a post</a>
           </li>
         </ul>
       </div>
@@ -75,10 +81,26 @@
         <option value="oldest">Oldest First</option>
       </select>
     </div>
-    <section id="posts" class="d-flex flex-column gap-4"></section>
+    <div class="row">
+      <div class="col-lg-8"> <section id="posts" class="d-flex flex-column gap-4"></section>
+      </div>
+      <div class="col-lg-4 d-flex align-items-start mt-4 mt-lg-0"> <div id="imageCarousel" class="carousel slide w-100" data-bs-ride="carousel">
+          <div class="carousel-inner" id="carouselInner">
+            </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
+      </div>
+    </div>
   </main>
   <footer class="bg-dark text-white text-center py-4">
-    <p>© 2025 Blog Title</p>
+    <p>© 2025 My Europe Adventure</p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="./assets/js/marked.min.js"></script>
@@ -87,9 +109,35 @@
         loadPosts();
     });
 
+    let extractedImageUrls = []; // Global array to store image URLs for the carousel
+
+    // Function to extract image URLs and remove image tags from HTML content
+    function processHtmlContent(htmlContent) {
+        const imgRegex = /<img[^>]*src=["']([^"']*)["'][^>]*>/gi; // Regex to find img tags and capture src
+        let cleanedContent = htmlContent;
+        let match;
+
+        // Extract URLs
+        while ((match = imgRegex.exec(htmlContent)) !== null) {
+            if (match[1]) {
+                extractedImageUrls.push(match[1]);
+            }
+        }
+
+        // Remove img tags from the content
+        cleanedContent = cleanedContent.replace(imgRegex, '');
+
+        // You can still use marked.parse for any non-image markdown within the HTML,
+        // although if the content is truly pure HTML, this might not be necessary.
+        // Keeping it for flexibility in case there's mixed content.
+        return marked.parse(cleanedContent);
+    }
+
+
     async function loadPosts() {
         const postsContainer = document.getElementById('posts');
         postsContainer.innerHTML = '';
+        extractedImageUrls = []; // Reset image URLs for each load
 
         const postFiles = await fetchPostFileNames();
         let posts = [];
@@ -106,17 +154,19 @@
                 console.error(`Error loading post ${fileName}:`, error);
             }
         }
+
         sortAndDisplayPosts(posts);
     }
 
     async function fetchPostFileNames() {
-        return ["wow_post_2025-06-27.json", "prague_2025-06-28.json", "fort_collins_2024-05-1.json"];
+        return ["wow_post_2025-06-27.json", "prague_2025-06-28.json", "fort_collins_2024-05-1.json", "test_post_with_html_images.json"]; // Added new test file
     }
 
     function sortPosts() {
         const sortOrder = document.getElementById('sortOrder').value;
         const postsContainer = document.getElementById('posts');
 
+        // Re-extract posts from the DOM to ensure correct sorting based on current content
         const posts = Array.from(postsContainer.children).map(card => {
             return {
                 date: card.dataset.date,
@@ -138,6 +188,8 @@
         posts.forEach(post => {
             postsContainer.insertAdjacentHTML('beforeend', post.html);
         });
+        // Re-render carousel as well since posts might have changed order and images
+        populateCarousel();
     }
 
     function sortAndDisplayPosts(posts) {
@@ -155,6 +207,7 @@
 
         const postsContainer = document.getElementById('posts');
         postsContainer.innerHTML = '';
+        extractedImageUrls = []; // Clear images before parsing new posts
 
         posts.forEach(post => {
             const postDate = new Date(post.date);
@@ -168,18 +221,50 @@
                 minute: '2-digit',
                 hour12: true
             });
-            const location = post.location ? `<p class="card-text mb-1"><small class="text-body-secondary">Location: ${post.location}</small></p>` : '';            
+            const location = post.location ? `<p class="card-text mb-1"><small class="text-body-secondary">Location: ${post.location}</small></p>` : '';
+
+            // Process content to extract images and remove image tags
+            const processedContent = processHtmlContent(post.content);
+
             const postHtml = `
                 <div class="card bg-dark-subtle" data-date="${post.date}">
                   <div class="card-body">
                     <h2 class="card-title">${post.title}</h2>
                     ${location}
                     <p class="mb-1"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
-                    <p class="card-text">${marked.parse(post.content)}</p>
+                    <p class="card-text">${processedContent}</p>
                   </div>
                 </div>
             `;
             postsContainer.innerHTML += postHtml;
+        });
+
+        populateCarousel(); // Call function to populate the carousel after posts are loaded
+    }
+
+    function populateCarousel() {
+        const carouselInner = document.getElementById('carouselInner');
+        carouselInner.innerHTML = ''; // Clear existing carousel items
+
+        if (extractedImageUrls.length === 0) {
+            carouselInner.innerHTML = '<div class="carousel-item active"><img src="https://via.placeholder.com/400x300?text=No+Images" class="d-block w-100" alt="No images available"></div>';
+            return;
+        }
+
+        extractedImageUrls.forEach((url, index) => {
+            const activeClass = index === 0 ? 'active' : '';
+            const carouselItem = `
+                <div class="carousel-item ${activeClass}">
+                    <img src="${url}" class="d-block w-100" alt="Post Image ${index + 1}">
+                </div>
+            `;
+            carouselInner.innerHTML += carouselItem;
+        });
+
+        // Initialize Bootstrap Carousel manually if it wasn't already
+        new bootstrap.Carousel(document.getElementById('imageCarousel'), {
+            interval: 5000, // Cycle every 5 seconds
+            pause: 'hover' // Pause on hover
         });
     }
   </script>
