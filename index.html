@@ -49,10 +49,10 @@
     .card.bg-dark-subtle { background-color: #2d3238 !important; }
     .card.bg-body-secondary { background-color: #3c4249 !important; }
     .card.bg-body-tertiary { background-color: #343a40 !important; }
-    /* Ensure carousel images fit */
-    .carousel-item img {
+    /* Ensure carousel images fit within the card */
+    .card .carousel-item img {
       width: 100%;
-      height: 300px; /* Adjust as needed */
+      height: 250px; /* Adjust as needed for card carousels */
       object-fit: cover; /* Ensures images cover the area without distortion */
     }
   </style>
@@ -82,20 +82,7 @@
       </select>
     </div>
     <div class="row">
-      <div class="col-lg-8"> <section id="posts" class="d-flex flex-column gap-4"></section>
-      </div>
-      <div class="col-lg-4 d-flex align-items-start mt-4 mt-lg-0"> <div id="imageCarousel" class="carousel slide w-100" data-bs-ride="carousel">
-          <div class="carousel-inner" id="carouselInner">
-            </div>
-          <button class="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Previous</span>
-          </button>
-          <button class="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="visually-hidden">Next</span>
-          </button>
-        </div>
+      <div class="col-12"> <section id="posts" class="d-flex flex-column gap-4"></section>
       </div>
     </div>
   </main>
@@ -109,35 +96,40 @@
         loadPosts();
     });
 
-    let extractedImageUrls = []; // Global array to store image URLs for the carousel
-
     // Function to extract image URLs and remove image tags from HTML content
+    // Returns an object: { cleanedContent: string, extractedImages: array }
     function processHtmlContent(htmlContent) {
         const imgRegex = /<img[^>]*src=["']([^"']*)["'][^>]*>/gi; // Regex to find img tags and capture src
+        let tempExtractedImages = []; // Array for images from THIS post
         let cleanedContent = htmlContent;
         let match;
+
+        // Reset regex lastIndex property before each use
+        imgRegex.lastIndex = 0; // Important for global regex in a loop
 
         // Extract URLs
         while ((match = imgRegex.exec(htmlContent)) !== null) {
             if (match[1]) {
-                extractedImageUrls.push(match[1]);
+                tempExtractedImages.push(match[1]);
             }
         }
 
         // Remove img tags from the content
         cleanedContent = cleanedContent.replace(imgRegex, '');
 
-        // You can still use marked.parse for any non-image markdown within the HTML,
-        // although if the content is truly pure HTML, this might not be necessary.
-        // Keeping it for flexibility in case there's mixed content.
-        return marked.parse(cleanedContent);
+        // Parse with marked for any *other* Markdown within the HTML content
+        // If content is purely HTML and contains no markdown, marked.parse might not be strictly necessary
+        // but it's safe to keep for robustness.
+        const finalContent = marked.parse(cleanedContent);
+
+        return { cleanedContent: finalContent, extractedImages: tempExtractedImages };
     }
 
 
     async function loadPosts() {
         const postsContainer = document.getElementById('posts');
         postsContainer.innerHTML = '';
-        extractedImageUrls = []; // Reset image URLs for each load
+        // extractedImageUrls no longer global, managed per post
 
         const postFiles = await fetchPostFileNames();
         let posts = [];
@@ -159,37 +151,13 @@
     }
 
     async function fetchPostFileNames() {
-        return ["wow_post_2025-06-27.json", "prague_2025-06-28.json", "fort_collins_2024-05-1.json", "test_post_with_html_images.json"]; // Added new test file
+        return ["wow_post_2025-06-27.json", "prague_2025-06-28.json", "fort_collins_2024-05-1.json", "test_post_with_html_images.json", "test_post_no_images.json"]; // Added new test file
     }
 
+    // sortPosts function now needs to reload and re-render everything
+    // because carousels are dynamically built within the cards
     function sortPosts() {
-        const sortOrder = document.getElementById('sortOrder').value;
-        const postsContainer = document.getElementById('posts');
-
-        // Re-extract posts from the DOM to ensure correct sorting based on current content
-        const posts = Array.from(postsContainer.children).map(card => {
-            return {
-                date: card.dataset.date,
-                html: card.outerHTML
-            };
-        });
-
-        posts.sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            if (sortOrder === 'newest') {
-                return dateB - dateA;
-            } else {
-                return dateA - dateB;
-            }
-        });
-
-        postsContainer.innerHTML = '';
-        posts.forEach(post => {
-            postsContainer.insertAdjacentHTML('beforeend', post.html);
-        });
-        // Re-render carousel as well since posts might have changed order and images
-        populateCarousel();
+        loadPosts(); // Re-load and re-render all posts based on new sort order
     }
 
     function sortAndDisplayPosts(posts) {
@@ -207,9 +175,8 @@
 
         const postsContainer = document.getElementById('posts');
         postsContainer.innerHTML = '';
-        extractedImageUrls = []; // Clear images before parsing new posts
 
-        posts.forEach(post => {
+        posts.forEach((post, index) => { // Use index to create unique carousel IDs
             const postDate = new Date(post.date);
             const formattedDate = postDate.toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -224,7 +191,37 @@
             const location = post.location ? `<p class="card-text mb-1"><small class="text-body-secondary">Location: ${post.location}</small></p>` : '';
 
             // Process content to extract images and remove image tags
-            const processedContent = processHtmlContent(post.content);
+            const { cleanedContent, extractedImages } = processHtmlContent(post.content);
+
+            let carouselHtml = '';
+            if (extractedImages.length > 0) {
+                const carouselId = `imageCarousel-${post.date.replace(/[^a-zA-Z0-9]/g, '')}-${index}`; // More robust unique ID
+                let carouselItems = '';
+                extractedImages.forEach((url, imgIndex) => {
+                    const activeClass = imgIndex === 0 ? 'active' : '';
+                    carouselItems += `
+                        <div class="carousel-item ${activeClass}">
+                            <img src="${url}" class="d-block w-100" alt="Post Image ${imgIndex + 1}">
+                        </div>
+                    `;
+                });
+
+                carouselHtml = `
+                    <div id="${carouselId}" class="carousel slide w-100 mb-3" data-bs-ride="carousel">
+                      <div class="carousel-inner">
+                        ${carouselItems}
+                      </div>
+                      <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                      </button>
+                      <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                      </button>
+                    </div>
+                `;
+            }
 
             const postHtml = `
                 <div class="card bg-dark-subtle" data-date="${post.date}">
@@ -232,39 +229,19 @@
                     <h2 class="card-title">${post.title}</h2>
                     ${location}
                     <p class="mb-1"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
-                    <p class="card-text">${processedContent}</p>
+                    ${carouselHtml} <p class="card-text">${cleanedContent}</p>
                   </div>
                 </div>
             `;
             postsContainer.innerHTML += postHtml;
         });
 
-        populateCarousel(); // Call function to populate the carousel after posts are loaded
-    }
-
-    function populateCarousel() {
-        const carouselInner = document.getElementById('carouselInner');
-        carouselInner.innerHTML = ''; // Clear existing carousel items
-
-        if (extractedImageUrls.length === 0) {
-            carouselInner.innerHTML = '<div class="carousel-item active"><img src="https://via.placeholder.com/400x300?text=No+Images" class="d-block w-100" alt="No images available"></div>';
-            return;
-        }
-
-        extractedImageUrls.forEach((url, index) => {
-            const activeClass = index === 0 ? 'active' : '';
-            const carouselItem = `
-                <div class="carousel-item ${activeClass}">
-                    <img src="${url}" class="d-block w-100" alt="Post Image ${index + 1}">
-                </div>
-            `;
-            carouselInner.innerHTML += carouselItem;
-        });
-
-        // Initialize Bootstrap Carousel manually if it wasn't already
-        new bootstrap.Carousel(document.getElementById('imageCarousel'), {
-            interval: 5000, // Cycle every 5 seconds
-            pause: 'hover' // Pause on hover
+        // Initialize all carousels after they have been added to the DOM
+        document.querySelectorAll('.carousel.slide').forEach(carouselEl => {
+            new bootstrap.Carousel(carouselEl, {
+                interval: 5000,
+                pause: 'hover'
+            });
         });
     }
   </script>
