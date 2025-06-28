@@ -54,6 +54,7 @@
       width: 100%;
       height: 250px; /* Adjust as needed for card carousels */
       object-fit: cover; /* Ensures images cover the area without distortion */
+      /* border: 2px solid red; /* TEMPORARY: For debugging image visibility */
     }
   </style>
 </head>
@@ -118,8 +119,6 @@
         cleanedContent = cleanedContent.replace(imgRegex, '');
 
         // Parse with marked for any *other* Markdown within the HTML content
-        // If content is purely HTML and contains no markdown, marked.parse might not be strictly necessary
-        // but it's safe to keep for robustness.
         const finalContent = marked.parse(cleanedContent);
 
         return { cleanedContent: finalContent, extractedImages: tempExtractedImages };
@@ -129,7 +128,6 @@
     async function loadPosts() {
         const postsContainer = document.getElementById('posts');
         postsContainer.innerHTML = '';
-        // extractedImageUrls no longer global, managed per post
 
         const postFiles = await fetchPostFileNames();
         let posts = [];
@@ -151,13 +149,14 @@
     }
 
     async function fetchPostFileNames() {
-        return ["wow_post_2025-06-27.json", "prague_2025-06-28.json", "fort_collins_2024-05-1.json", "test_post_with_html_images.json", "test_post_no_images.json"]; // Added new test file
+        return ["wow_post_2025-06-27.json", "prague_2025-06-28.json", "fort_collins_2024-05-1.json", "test_post_with_html_images.json", "test_post_no_images.json"];
     }
 
-    // sortPosts function now needs to reload and re-render everything
-    // because carousels are dynamically built within the cards
+    // sortPosts now just re-renders all posts based on the new order
     function sortPosts() {
-        loadPosts(); // Re-load and re-render all posts based on new sort order
+        // Fetch posts again if you need to re-process content, otherwise just re-sort and display existing ones
+        // For simplicity, calling loadPosts() which will re-fetch and re-render everything
+        loadPosts();
     }
 
     function sortAndDisplayPosts(posts) {
@@ -176,7 +175,7 @@
         const postsContainer = document.getElementById('posts');
         postsContainer.innerHTML = '';
 
-        posts.forEach((post, index) => { // Use index to create unique carousel IDs
+        posts.forEach((post, index) => {
             const postDate = new Date(post.date);
             const formattedDate = postDate.toLocaleDateString('en-US', {
                 year: 'numeric',
@@ -195,13 +194,14 @@
 
             let carouselHtml = '';
             if (extractedImages.length > 0) {
-                const carouselId = `imageCarousel-${post.date.replace(/[^a-zA-Z0-9]/g, '')}-${index}`; // More robust unique ID
+                const carouselId = `imageCarousel-${post.date.replace(/[^a-zA-Z0-9]/g, '')}-${index}`; // Unique ID for each carousel
                 let carouselItems = '';
                 extractedImages.forEach((url, imgIndex) => {
                     const activeClass = imgIndex === 0 ? 'active' : '';
+                    // TEMPORARY: Red border for debugging image rendering
                     carouselItems += `
                         <div class="carousel-item ${activeClass}">
-                            <img src="${url}" class="d-block w-100" alt="Post Image ${imgIndex + 1}">
+                            <img src="${url}" class="d-block w-100" alt="Post Image ${imgIndex + 1}" style="border: 2px solid red;">
                         </div>
                     `;
                 });
@@ -229,14 +229,19 @@
                     <h2 class="card-title">${post.title}</h2>
                     ${location}
                     <p class="mb-1"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
-                    ${carouselHtml} <p class="card-text">${cleanedContent}</p>
+
+                    <div class="row"> <div class="col-md-6"> <p class="card-text">${cleanedContent}</p>
+                      </div>
+                      <div class="col-md-6"> ${carouselHtml} </div>
+                    </div>
+
                   </div>
                 </div>
             `;
             postsContainer.innerHTML += postHtml;
         });
 
-        // Initialize all carousels after they have been added to the DOM
+        // Initialize all carousels after they are added to the DOM
         document.querySelectorAll('.carousel.slide').forEach(carouselEl => {
             new bootstrap.Carousel(carouselEl, {
                 interval: 5000,
