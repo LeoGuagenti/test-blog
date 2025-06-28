@@ -185,12 +185,12 @@
                 minute: '2-digit',
                 hour12: true
             });
-            const location = post.location ? `<p class="card-text mb-1"><small class="text-body-secondary">Location: ${post.location}</small></p>` : '';
+            const location = post.location ? `<p class="mb-1"><small class="text-body-secondary">Location: ${post.location}</small></p>` : '';
 
             // Process content to extract images and remove image tags
             const { cleanedContent, extractedImages } = processHtmlContent(post.content);
 
-            let carouselHtml = '';
+            let carouselColumnHtml = '';
             let contentColumnClass = 'col-12'; // Default to full width for content
 
             if (extractedImages.length > 0) {
@@ -205,19 +205,20 @@
                     `;
                 });
 
-                carouselHtml = `
-                    <div id="${carouselId}" class="carousel slide w-100 h-100" data-bs-ride="carousel">
-                      <div class="carousel-inner h-100">
-                        ${carouselItems}
-                      </div>
-                      <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                      </button>
-                      <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                      </button>
+                carouselColumnHtml = `
+                    <div class="col-md-6"> <div id="${carouselId}" class="carousel slide w-100 h-100" data-bs-ride="carousel">
+                          <div class="carousel-inner h-100">
+                            ${carouselItems}
+                          </div>
+                          <button class="carousel-control-prev" type="button" data-bs-target="#${carouselId}" data-bs-slide="prev">
+                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Previous</span>
+                          </button>
+                          <button class="carousel-control-next" type="button" data-bs-target="#${carouselId}" data-bs-slide="next">
+                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                            <span class="visually-hidden">Next</span>
+                          </button>
+                        </div>
                     </div>
                 `;
                 contentColumnClass = 'col-md-6'; // Adjust content width if carousel is present
@@ -230,8 +231,8 @@
                     ${location}
                     <p class="mb-1"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
 
-                    <div class="row g-3 d-flex align-items-stretch"> <div class="${contentColumnClass}"> <p class="card-text h-100">${cleanedContent}</p> </div>
-                      ${extractedImages.length > 0 ? `<div class="col-md-6">${carouselHtml}</div>` : ''} </div>
+                    <div class="row g-3 d-flex align-items-stretch"> <div class="${contentColumnClass}"> ${cleanedContent} </div>
+                      ${carouselColumnHtml} </div>
 
                   </div>
                 </div>
