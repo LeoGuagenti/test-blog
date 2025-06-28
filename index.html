@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<!-- <script type="text/javascript">
         var gk_isXlsx = false;
         var gk_xlsxFileLookup = {};
         var gk_fileData = {};
@@ -17,16 +17,12 @@
                 // Filter out blank rows (rows where all cells are empty, null, or undefined)
                 var filteredData = jsonData.filter(row => row.some(filledCell));
 
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
                 var headerRowIndex = filteredData.findIndex((row, index) =>
                   row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
                 );
-                // Fallback
                 if (headerRowIndex === -1 || headerRowIndex > 25) {
                   headerRowIndex = 0;
                 }
-
-                // Convert filtered JSON back to CSV
                 var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
                 csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
                 return csv;
@@ -37,7 +33,7 @@
         }
         return gk_fileData[filename] || "";
         }
-        </script><!DOCTYPE html>
+        </script><!DOCTYPE html> -->
 <html lang="en" data-bs-theme="dark">
 <head>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -52,19 +48,16 @@
     .card.bg-dark-subtle { background-color: #2d3238 !important; }
     .card.bg-body-secondary { background-color: #3c4249 !important; }
     .card.bg-body-tertiary { background-color: #343a40 !important; }
-    /* Ensure carousel images fit within the card */
     .card .carousel-item img {
-      width: 100%;
-      height: 250px; /* This makes the image itself 250px tall */
-      object-fit: cover; /* Ensures images cover the area without distortion */
-      /* Removed temporary red border */
+      /* width: 100%;
+      height: 250px; */
+      object-fit: cover;
+      object-position: center;
     }
-
-    /* Add these new rules for fixed carousel height */
     .card .carousel,
     .card .carousel-inner,
     .card .carousel-item {
-        height: 350px; /* Set a fixed height for the carousel container and items */
+        height: 300px;
     }
   </style>
 </head>
@@ -107,28 +100,20 @@
         loadPosts();
     });
 
-    // Function to extract image URLs and remove image tags from HTML content
-    // Returns an object: { cleanedContent: string, extractedImages: array }
     function processHtmlContent(htmlContent) {
-        const imgRegex = /<img[^>]*src=["']([^"']*)["'][^>]*>/gi; // Regex to find img tags and capture src
-        let tempExtractedImages = []; // Array for images from THIS post
+        const imgRegex = /<img[^>]*src=["']([^"']*)["'][^>]*>/gi;
+        let tempExtractedImages = [];
         let cleanedContent = htmlContent;
         let match;
 
-        // Reset regex lastIndex property before each use
-        imgRegex.lastIndex = 0; // Important for global regex in a loop
-
-        // Extract URLs
+        imgRegex.lastIndex = 0;
         while ((match = imgRegex.exec(htmlContent)) !== null) {
             if (match[1]) {
                 tempExtractedImages.push(match[1]);
             }
         }
 
-        // Remove img tags from the content
         cleanedContent = cleanedContent.replace(imgRegex, '');
-
-        // Parse with marked for any *other* Markdown within the HTML content
         const finalContent = marked.parse(cleanedContent);
 
         return { cleanedContent: finalContent, extractedImages: tempExtractedImages };
@@ -162,7 +147,6 @@
         return ["wow_post_2025-06-27.json", "prague_2025-06-28.json", "fort_collins_2024-05-1.json"];
     }
 
-    // sortPosts now just re-renders all posts based on the new order
     function sortPosts() {
         loadPosts();
     }
@@ -196,15 +180,13 @@
                 hour12: true
             });
             const location = post.location ? `<p class="mb-1"><small class="text-body-secondary">Location: ${post.location}</small></p>` : '';
-
-            // Process content to extract images and remove image tags
             const { cleanedContent, extractedImages } = processHtmlContent(post.content);
 
             let carouselColumnHtml = '';
-            let contentColumnClass = 'col-12'; // Default to full width for content
+            let contentColumnClass = 'col-12';
 
             if (extractedImages.length > 0) {
-                const carouselId = `imageCarousel-${post.date.replace(/[^a-zA-Z0-9]/g, '')}-${index}`; // Unique ID for each carousel
+                const carouselId = `imageCarousel-${post.date.replace(/[^a-zA-Z0-9]/g, '')}-${index}`;
                 let carouselItems = '';
                 extractedImages.forEach((url, imgIndex) => {
                     const activeClass = imgIndex === 0 ? 'active' : '';
@@ -231,7 +213,7 @@
                         </div>
                     </div>
                 `;
-                contentColumnClass = 'col-md-6'; // Adjust content width if carousel is present
+                contentColumnClass = 'col-md-6';
             }
 
             const postHtml = `
