@@ -54,7 +54,7 @@
 <body class="bg-dark text-white">
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-      <a class="navbar-brand" href="/"><span class="fi fi-mk"></span> My Europe Adventure</a>
+      <a class="navbar-brand" href="/">My Europe Adventure</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -89,7 +89,7 @@
 
     async function loadPosts() {
         const postsContainer = document.getElementById('posts');
-        postsContainer.innerHTML = ''; // Clear existing posts
+        postsContainer.innerHTML = '';
 
         const postFiles = await fetchPostFileNames();
         let posts = [];
@@ -172,12 +172,12 @@
             const location = post.location ? `<p class="card-text p-0"><small class="text-body-secondary p-0">Location: ${post.location}</small></p>` : '';
             const postHtml = `
                 <div class="card bg-dark-subtle" data-date="${post.date}">
-                    <div class="card-body">
-                        <h2 class="card-title">${post.title}</h2>
-                        ${location}
-                        <p class="card-text p-0"><small class="text-body-secondary p-0">Posted on ${formattedDate} at ${formattedTime}</small></p>
-                        <p class="card-text">${marked.parse(post.content)}</p>
-                    </div>
+                  <div class="card-body">
+                    <h2 class="card-title">${post.title}</h2>
+                    ${location}
+                    <p class="mb-1"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
+                    <p class="card-text">${marked.parse(post.content)}</p>
+                  </div>
                 </div>
             `;
             postsContainer.innerHTML += postHtml;
