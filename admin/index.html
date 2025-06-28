@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create a Post</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+  <style>
+    body { background-color: #212529; }
+    .card.bg-body-secondary { background-color: #3c4249 !important; }
+    .resize-handle {
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      background: #007BFF;
+      border: 2px solid #fff;
+      bottom: 0;
+      right: 0;
+      cursor: se-resize;
+      display: none;
+      z-index: 10;
+    }
+    #editor .ql-editor {
+      background-color: #343a40;
+      color: #f8f9fa;
+      border-radius: 0.25rem;
+    }
+    #editor .ql-toolbar {
+      background-color: #2d3238;
+      border: none;
+      border-radius: 0.25rem 0.25rem 0 0;
+    }
+    #postButton {
+      min-width: 100px;
+    }
+    .ql-toolbar.ql-snow { background-color: #000; }
+    .ql-toolbar.ql-snow .ql-formats button,
+    .ql-toolbar.ql-snow .ql-formats .ql-picker-label,
+    .ql-toolbar.ql-snow .ql-formats .ql-picker-item {
+      color: white !important;
+    }
+    .ql-toolbar.ql-snow .ql-formats button.ql-active,
+    .ql-toolbar.ql-snow .ql-formats .ql-picker-label.ql-active,
+    .ql-toolbar.ql-snow .ql-formats .ql-picker-item.ql-selected {
+      color: white !important;
+    }
+    .ql-toolbar.ql-snow .ql-formats button:hover,
+    .ql-toolbar.ql-snow .ql-formats .ql-picker-label:hover,
+    .ql-toolbar.ql-snow .ql-formats .ql-picker-item:hover {
+      color: #ccc !important;
+    }
+    #editor .ql-editor img { max-width: 100%; position: relative; user-select: none; }
+    #editor .ql-editor img:hover { outline: 3px solid #007BFF; animation: pulse 1.5s infinite; }
+    #editor .ql-editor img.resizing { cursor: se-resize; outline: 3px solid #0056b3; }
+    @keyframes pulse { 0% { outline-color: #007BFF; } 50% { outline-color: #4da8ff; } 100% { outline-color: #007BFF; } }
+  </style>
+</head>
+<body class="bg-dark text-white">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="/">My Europe Adventure</a>
+    </div>
+  </nav>
+
+  <main class="container py-2">
+    
+    <div class="card bg-body-secondary p-4">
+        <p class="h4">Create a Post</p>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="postTitle" class="form-label">Title</label>
+                <input type="text" id="postTitle" class="form-control bg-dark text-white" placeholder="Enter post title">
+            </div>
+            <div class="col-md-6">
+                <label for="postLocation" class="form-label">Location</label>
+                <input type="text" id="postLocation" class="form-control bg-dark text-white" placeholder="Enter location">
+            </div>
+        </div>
+
+      <div class="mb-3">
+        <ul class="nav nav-tabs" id="postTabs">
+          <li class="nav-item"><button class="nav-link active" onclick="showTab('editorTab')">Editor</button></li>
+          <li class="nav-item"><button class="nav-link" onclick="showTab('previewTab')">Preview</button></li>
+        </ul>
+      </div>
+
+      <div id="editorTab" class="tab-content active">
+        <div id="editor"></div>
+      </div>
+      <div id="previewTab" class="tab-content" style="display:none;">
+        <div id="preview" class="bg-light text-dark p-2 rounded"></div>
+      </div>
+
+      <br>
+      
+      <div class="d-flex flex-row-reverse align-items-center gap-2 mb-3">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="flex-grow-1">
+                <input type="password" id="githubApiKey" class="form-control bg-dark text-white w-100" placeholder="Enter GitHub API key">
+                <div id="apiKeyStatus" class="form-text text-muted"></div>
+            </div>
+            <button id="postButton" class="btn btn-primary" onclick="savePost()" disabled>Post</button>
+        </div>
+    </div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+  <script>
+    const quill = new Quill('#editor', {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+          ['link', 'image', 'code-block'],
+          ['clean']
+        ]
+      }
+    });
+
+    quill.on('text-change', updatePreview);
+
+    function updatePreview() {
+      const title = document.getElementById('postTitle').value;
+      const location = document.getElementById('postLocation').value;
+      const content = quill.root.innerHTML;
+      document.getElementById('preview').innerHTML = `
+        <h2>${title}</h2>
+        <p><em>${location}</em></p>
+        ${content}
+      `;
+      attachResizeHandles();
+    }
+
+    function savePost() {
+        const title = document.getElementById('postTitle').value.trim();
+        const location = document.getElementById('postLocation').value.trim();
+        const date = new Date().toISOString();
+        const content = quill.root.innerHTML;
+
+        const post = {
+            title: title,
+            location: location,
+            date: date,
+            content: content
+        };
+
+        const blob = new Blob([JSON.stringify(post, null, 2)], { type: 'application/json' });
+        const fileName = `${sanitizeFileName(title || 'untitled')}_${date.slice(0,10)}.json`;
+
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        }
+
+    function sanitizeFileName(name) {
+    return name.replace(/[^a-z0-9_\-]/gi, '_').toLowerCase();
+    }
+
+    function loadPost() {
+      const saved = localStorage.getItem('savedPost');
+      if (saved) {
+        const post = JSON.parse(saved);
+        document.getElementById('postTitle').value = post.title || '';
+        document.getElementById('postLocation').value = post.location || '';
+        quill.root.innerHTML = post.content || '';
+        updatePreview();
+      } else {
+        alert('No saved post found!');
+      }
+    }
+
+    function showTab(tabId) {
+      document.getElementById('editorTab').style.display = (tabId === 'editorTab') ? 'block' : 'none';
+      document.getElementById('previewTab').style.display = (tabId === 'previewTab') ? 'block' : 'none';
+      document.querySelectorAll('#postTabs .nav-link').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`#postTabs .nav-link[onclick="showTab('${tabId}')"]`).classList.add('active');
+    }
+
+    let isResizing = false, currentImage = null, startX, startY, startWidth, startHeight;
+
+    function attachResizeHandles() {
+      const imgs = document.querySelectorAll('#editor .ql-editor img');
+      imgs.forEach(img => {
+        if (!img.parentElement.querySelector('.resize-handle')) {
+          const handle = document.createElement('div');
+          handle.className = 'resize-handle';
+          img.parentElement.style.position = 'relative';
+          img.parentElement.appendChild(handle);
+
+          img.addEventListener('mouseenter', () => {
+            if (!isResizing) handle.style.display = 'block';
+          });
+          img.addEventListener('mouseleave', () => {
+            if (!isResizing) handle.style.display = 'none';
+          });
+
+          handle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            isResizing = true;
+            currentImage = img;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = parseFloat(getComputedStyle(img).width);
+            startHeight = parseFloat(getComputedStyle(img).height);
+            img.classList.add('resizing');
+          });
+        }
+      });
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      if (isResizing && currentImage) {
+        const newWidth = startWidth + (e.clientX - startX);
+        const newHeight = startHeight + (e.clientY - startY);
+        if (newWidth > 50 && newHeight > 50) {
+          currentImage.style.width = newWidth + 'px';
+          currentImage.style.height = newHeight + 'px';
+        }
+        updatePreview();
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (currentImage) currentImage.classList.remove('resizing');
+      isResizing = false;
+      currentImage = null;
+      document.querySelectorAll('.resize-handle').forEach(handle => handle.style.display = 'none');
+    });
+
+    document.getElementById('githubApiKey').addEventListener('input', debounce(validateApiKey, 500));
+
+    async function validateApiKey() {
+    const key = document.getElementById('githubApiKey').value.trim();
+    const statusEl = document.getElementById('apiKeyStatus');
+    const postButton = document.getElementById('postButton');
+
+    if (!key) {
+        postButton.disabled = true;
+        statusEl.textContent = '';
+        return;
+    }
+
+    statusEl.textContent = 'Validating...';
+    try {
+        const response = await fetch('https://api.github.com/user', {
+        headers: { Authorization: `token ${key}` }
+        });
+        if (response.ok) {
+        statusEl.textContent = '✅ Valid API key';
+        postButton.disabled = false;
+        } else {
+        statusEl.textContent = '❌ Invalid API key';
+        postButton.disabled = true;
+        }
+    } catch (e) {
+        statusEl.textContent = '⚠️ Error validating key';
+        postButton.disabled = true;
+    }
+    }
+
+    function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+    }
+
+    attachResizeHandles();
+  </script>
+</body>
+</html>
