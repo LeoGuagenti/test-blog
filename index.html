@@ -169,13 +169,13 @@
                 minute: '2-digit',
                 hour12: true
             });
-            const location = post.location ? `<p class="card-text"><small class="text-body-secondary">Location: ${post.location}</small></p>` : '';
+            const location = post.location ? `<p class="card-text p-0"><small class="text-body-secondary">Location: ${post.location}</small></p>` : '';
             const postHtml = `
                 <div class="card bg-dark-subtle" data-date="${post.date}">
-                    <div class="card-body p-0">
-                        <h2 class="card-title text-warning">${post.title}</h2>
+                    <div class="card-body">
+                        <h2 class="card-title">${post.title}</h2>
                         ${location}
-                        <p class="card-text"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
+                        <p class="card-text p-0"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
                         <p class="card-text">${marked.parse(post.content)}</p>
                     </div>
                 </div>
