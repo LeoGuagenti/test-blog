@@ -82,7 +82,6 @@
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="./assets/js/marked.min.js"></script>
-  <script src="./assets/js/github_io.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
         loadPosts();
@@ -112,16 +111,7 @@
     }
 
     async function fetchPostFileNames() {
-        // In a real-world scenario, you'd have a server-side endpoint
-        // to list files in the /data directory. For a client-side only
-        // solution, you'd need to manually list the filenames or use a build step.
-        // For this example, let's assume we know the file name based on the problem.
-        // In a production environment, directly listing directory contents client-side is not possible
-        // due to browser security restrictions.
-        // You would typically have a server endpoint that returns a list of JSON file names.
-        // For demonstration purposes, we will hardcode the known file.
-        // If you have many files, you'd need a server-side solution or a pre-built manifest.
-        return ["wow_post_2025-06-27.json"];
+        return ["wow_post_2025-06-27.json", "prague_2025-06-28.json"];
     }
 
     function sortPosts() {
@@ -130,7 +120,7 @@
         const posts = Array.from(postsContainer.children).map(card => {
             return {
                 date: card.dataset.date,
-                html: card.outerHTML // Store the full HTML to re-insert
+                html: card.outerHTML
             };
         });
 
@@ -144,7 +134,7 @@
             }
         });
 
-        postsContainer.innerHTML = ''; // Clear and re-add in sorted order
+        postsContainer.innerHTML = '';
         posts.forEach(post => {
             postsContainer.insertAdjacentHTML('beforeend', post.html);
         });
@@ -165,7 +155,7 @@
         });
 
         const postsContainer = document.getElementById('posts');
-        postsContainer.innerHTML = ''; // Clear previous posts before displaying sorted ones
+        postsContainer.innerHTML = '';
 
         posts.forEach(post => {
             const postDate = new Date(post.date);
