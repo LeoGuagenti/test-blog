@@ -111,7 +111,7 @@
     }
 
     async function fetchPostFileNames() {
-        return ["wow_post_2025-06-27.json", "prague_2025-06-28.json"];
+        return ["wow_post_2025-06-27.json", "prague_2025-06-28.json", "fort_collins_2024-05-1.json"];
     }
 
     function sortPosts() {
@@ -180,7 +180,7 @@
                     <div class="card-body">
                         <h2 class="card-title text-warning">${post.title}</h2>
                         ${location}
-                        <p class="card-text"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
+                        <p class="card-text"><small class="text-body-secondary m-0 p-0">Posted on ${formattedDate} at ${formattedTime}</small></p>
                         <p class="card-text">${marked.parse(post.content)}</p>
                     </div>
                 </div>
