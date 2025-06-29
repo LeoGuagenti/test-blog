@@ -106,7 +106,34 @@
     }
 
     async function fetchPostFileNames() {
-        return ["wow_post_2025-06-27.json", "prague_2025-06-28.json", "fort_collins_2024-05-1.json"];
+        const workerUrl = 'https://workers-playground-plain-moon-11a3.santadomo.workers.dev/';
+
+        try {
+            const response = await fetch(`${workerUrl}/files`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // If you implemented a token check for GET requests in your worker,
+                    // you would need to add an 'Authorization' header or a query parameter here.
+                    // For example:
+                    // 'Authorization': `Bearer ${YOUR_FRONTEND_ACCESS_TOKEN}`
+                    // Make sure YOUR_FRONTEND_ACCESS_TOKEN is securely handled and not exposed in client-side code if it's sensitive.
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to fetch post file names from worker: ${errorText}`);
+            }
+
+            const fileNames = await response.json();
+            console.log('Successfully fetched post file names:', fileNames);
+            return fileNames;
+
+        } catch (error) {
+            console.error('Error in fetchPostFileNames:', error);
+            return []; 
+        }
     }
 
     function sortPosts() {
