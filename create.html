@@ -100,7 +100,7 @@
                 <input type="password" id="githubApiKey" class="form-control bg-dark text-white w-100" placeholder="Enter GitHub API key">
                 <div id="apiKeyStatus" class="form-text text-muted"></div>
             </div>
-            <button id="postButton" class="btn btn-primary" onclick="savePost()" disabled>Post</button>
+            <button id="postButton" class="btn btn-primary" onclick="await savePost()" disabled>Post</button>
         </div>
     </div>
   </main>
@@ -134,11 +134,12 @@
       attachResizeHandles();
     }
 
-    function savePost() {
+    async function savePost() {
         const title = document.getElementById('postTitle').value.trim();
         const location = document.getElementById('postLocation').value.trim();
         const date = new Date().toISOString();
         const content = quill.root.innerHTML;
+        const githubApiKey = document.getElementById('githubApiKey').value.trim(); // Get the API key
 
         const post = {
             title: title,
@@ -147,19 +148,43 @@
             content: content
         };
 
-        const blob = new Blob([JSON.stringify(post, null, 2)], { type: 'application/json' });
         const fileName = `${sanitizeFileName(title || 'untitled')}_${date.slice(0,10)}.json`;
+        const path = `data/${fileName}`;
+        // The content for the new endpoint should be the JSON object itself, not base64 encoded string.
+        // Also, removed the owner and repo variables as they are not needed for this endpoint.
 
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const requestBody = {
+            path: path,
+            content: post, // Send the JSON object directly
+            message: `Add post: ${title}`,
+            token: githubApiKey // Include the token from the input field
+        };
+
+        try {
+            const res = await fetch('https://workers-playground-plain-moon-11a3.santadomo.workers.dev/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            const data = await res.json();
+            console.log(data);
+            if (res.ok) {
+                alert('Post saved successfully!');
+            } else {
+                alert('Failed to save post: ' + (data.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error saving post:', error);
+            alert('An error occurred while saving the post.');
         }
+    }
+
 
     function sanitizeFileName(name) {
-    return name.replace(/[^a-z0-9_\-]/gi, '_').toLowerCase();
+      return name.replace(/[^a-z0-9_\-]/gi, '_').toLowerCase();
     }
 
     function loadPost() {
