@@ -208,10 +208,13 @@
             const postHtml = `
                 <div class="card bg-dark-subtle" data-date="${post.date}">
                   <div class="card-body">
-                    <h2 class="card-title">${post.title}</h2>
+                    <div class="d-flex spaw-between">
+                      <h2 class="card-title">${post.title}</h2>
+                      <p class="mb-1"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
+                    </div>
                     ${location}
-                    <p class="mb-1"><small class="text-body-secondary">Posted on ${formattedDate} at ${formattedTime}</small></p>
-                    <br>
+                    
+                    <hr>
                     <div class="row g-3 d-flex align-items-stretch"> <div class="${contentColumnClass}"> ${cleanedContent} </div>
                       ${carouselColumnHtml} </div>
 
