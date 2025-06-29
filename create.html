@@ -142,10 +142,10 @@
         const githubApiKey = document.getElementById('githubApiKey').value.trim(); // Get the API key
 
         const post = {
-            title: title,
-            location: location,
-            date: date,
-            content: content
+            "title": title,
+            "location": location,
+            "date": date,
+            "content": content
         };
 
         const fileName = `${sanitizeFileName(title || 'untitled')}_${date.slice(0,10)}.json`;
